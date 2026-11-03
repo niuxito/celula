@@ -4,6 +4,8 @@
 
 Visor 3D interactivo de una célula humana real (línea HeLa) reconstruida por microscopía electrónica (FIB-SEM). Muestra la membrana plasmática, el núcleo, el retículo endoplasmático, el aparato de Golgi, 265 mitocondrias con sus medidas, endosomas, vesículas y microtúbulos. Incluye capas, opacidad, búsqueda y fichas. **Disponible en español e inglés**: el idioma se elige según el navegador y se cambia con el botón ES/EN (o con `?lang=es`). Las fichas en inglés son una traducción de las originales en español y no han sido revisadas por especialistas.
 
+![El visor girando la célula, retirando la membrana y enfocando una mitocondria, con el panel de capas a la izquierda y la ficha a la derecha](docs/atlas.gif)
+
 ## Cómo usarlo
 
 **Pruébalo en línea:** https://celula.alexisparron.com (la versión desplegada añade la analítica del sitio; el código de este repositorio no incluye ningún rastreador).

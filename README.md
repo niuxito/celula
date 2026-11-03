@@ -4,6 +4,8 @@
 
 Interactive 3D viewer of a real human cell (HeLa line) reconstructed by electron microscopy (FIB-SEM), for educational use. It shows the plasma membrane, nucleus, endoplasmic reticulum, Golgi apparatus, 265 mitochondria with their measurements, endosomes, vesicles and microtubules, with layers you can toggle, per-organelle opacity, search, and a description card for each structure. **Available in Spanish and English**: the language is picked from your browser and can be switched with the ES/EN button (or `?lang=en`). The English cards are a translation of the Spanish originals and have not been reviewed by specialists.
 
+![The viewer rotating the cell, peeling the membrane and focusing a mitochondrion, with the layers panel on the left and the card on the right](docs/atlas.gif)
+
 ## Usage
 
 **Try it online:** https://celula.alexisparron.com (the deployed version adds the site's analytics; the code in this repository contains no trackers).
