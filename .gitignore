@@ -1,0 +1,31 @@
+node_modules/
+.DS_Store
+__pycache__/
+
+# Salidas intermedias de herramientas/
+herramientas/*.bin
+herramientas/*.pkl
+herramientas/*.json
+
+# Ficheros locales que no son del proyecto
+celula-humana-en-capas.zip
+CLAUDE.md
+.deploy-local.sh
+
+# Secretos y credenciales
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+secrets.*
+credentials.*
+.vercel
+.env*
+
+# Capturas y fotos sueltas
+photo_*
