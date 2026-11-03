@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="Célula HeLa real reconstruida por microscopía electrónica (OpenOrganelle), con capas y fichas en español.">
+<meta name="description" data-i18n-attr="content:metaDesc" content="Visor 3D interactivo de una célula HeLa real reconstruida por microscopía electrónica (OpenOrganelle): 265 mitocondrias, retículo, Golgi, núcleo y más, en capas. Disponible en español e inglés.">
 <title>Célula humana en capas</title>
 <link rel="stylesheet" href="fonts/fonts.css">
 <style>
@@ -171,32 +171,33 @@ details.about a{color:var(--acc)}
 
 <header class="top">
   <div class="brand">
-    <h1>Célula humana <em>en capas</em></h1>
+    <h1 data-i18n-html="brand">Célula humana <em>en capas</em></h1>
     <p id="stats">Célula HeLa · microscopía electrónica FIB-SEM</p>
   </div>
-  <nav class="views" aria-label="Vistas">
-    <button class="chipbtn" data-view="top">Superior</button>
-    <button class="chipbtn" data-view="bottom">Desde el sustrato</button>
-    <button class="chipbtn" data-view="front">Frontal</button>
-    <button class="chipbtn" data-view="right">Lateral</button>
-    <button class="chipbtn" id="spin" aria-pressed="false">Girar</button>
-    <button class="chipbtn" id="reset">Restablecer</button>
+  <nav class="views" aria-label="Vistas" data-i18n-attr="aria-label:views">
+    <button class="chipbtn" data-view="top" data-i18n="top">Superior</button>
+    <button class="chipbtn" data-view="bottom" data-i18n="bottom">Desde el sustrato</button>
+    <button class="chipbtn" data-view="front" data-i18n="front">Frontal</button>
+    <button class="chipbtn" data-view="right" data-i18n="right">Lateral</button>
+    <button class="chipbtn" id="spin" aria-pressed="false" data-i18n="spin">Girar</button>
+    <button class="chipbtn" id="reset" data-i18n="reset">Restablecer</button>
+    <button class="chipbtn" id="lang" aria-label="Idioma" data-i18n-attr="aria-label:langLabel"></button>
   </nav>
 </header>
 
-<aside class="panel show" id="left" aria-label="Capas y sistemas">
+<aside class="panel show" id="left" aria-label="Capas y orgánulos" data-i18n-attr="aria-label:panelLayers">
   <div class="phead">
     <div class="search">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-      <input id="q" type="search" placeholder="Buscar orgánulo (p. ej. «mitocondria», «Golgi»)" autocomplete="off" aria-label="Buscar estructura">
+      <input id="q" type="search" placeholder="Buscar orgánulo (p. ej. «mitocondria», «Golgi»)" autocomplete="off" aria-label="Buscar estructura" data-i18n-attr="placeholder:searchPh;aria-label:search">
     </div>
     <div>
-      <div class="eyebrow" style="margin-bottom:7px">Pelar capas</div>
-      <div class="peel" role="group" aria-label="Pelar capas">
-        <button data-peel="0" aria-pressed="true">Todo</button>
-        <button data-peel="1" aria-pressed="false">Sin membrana</button>
-        <button data-peel="2" aria-pressed="false">Orgánulos</button>
-        <button data-peel="3" aria-pressed="false">Núcleo</button>
+      <div class="eyebrow" style="margin-bottom:7px" data-i18n="peel">Pelar capas</div>
+      <div class="peel" role="group" aria-label="Pelar capas" data-i18n-attr="aria-label:peel">
+        <button data-peel="0" aria-pressed="true" data-i18n="peelAll">Todo</button>
+        <button data-peel="1" aria-pressed="false" data-i18n="peelMembrane">Sin membrana</button>
+        <button data-peel="2" aria-pressed="false" data-i18n="peelOrganelles">Orgánulos</button>
+        <button data-peel="3" aria-pressed="false" data-i18n="peelNucleus">Núcleo</button>
       </div>
     </div>
   </div>
@@ -206,18 +207,18 @@ details.about a{color:var(--acc)}
   </div>
 </aside>
 
-<aside class="panel" id="right" aria-label="Ficha de la estructura">
+<aside class="panel" id="right" aria-label="Ficha de la estructura" data-i18n-attr="aria-label:panelCard">
   <div class="pbody" style="padding:0"><div id="info"></div></div>
 </aside>
 
-<div class="tabs" role="group" aria-label="Paneles">
-  <button data-tab="none" aria-pressed="true">Modelo</button>
-  <button data-tab="left" aria-pressed="false">Capas</button>
-  <button data-tab="right" aria-pressed="false">Ficha</button>
+<div class="tabs" role="group" aria-label="Paneles" data-i18n-attr="aria-label:tabs">
+  <button data-tab="none" aria-pressed="true" data-i18n="tabModel">Modelo</button>
+  <button data-tab="left" aria-pressed="false" data-i18n="tabLayers">Capas</button>
+  <button data-tab="right" aria-pressed="false" data-i18n="tabCard">Ficha</button>
 </div>
 
-<div id="loader"><div class="lt"><span id="ltxt">Cargando modelo anatómico…</span><span id="lpct">0 %</span></div><div class="bar"><i id="lbar"></i></div><div id="err" hidden></div></div>
-<div class="credit">Datos: <a href="https://openorganelle.janelia.org/datasets/jrc_hela-2" target="_blank" rel="noopener">OpenOrganelle jrc_hela-2</a> · Heinrich et al. (2021), Xu et al. (2021), <i>Nature</i> · HHMI Janelia · <a href="https://creativecommons.org/licenses/by/4.0/deed.es" target="_blank" rel="noopener">CC BY 4.0</a> · simplificado para web</div>
+<div id="loader"><div class="lt"><span id="ltxt" data-i18n="loading">Cargando modelo de la célula…</span><span id="lpct">0 %</span></div><div class="bar"><i id="lbar"></i></div><div id="err" hidden></div></div>
+<div class="credit" data-i18n-html="credit">Datos: <a href="https://openorganelle.janelia.org/datasets/jrc_hela-2" target="_blank" rel="noopener">OpenOrganelle jrc_hela-2</a> · Heinrich et al. (2021), Xu et al. (2021), <i>Nature</i> · HHMI Janelia · <a href="https://creativecommons.org/licenses/by/4.0/deed.es" target="_blank" rel="noopener">CC BY 4.0</a> · simplificado para web</div>
 <script src="data/anatomia.js"></script>
 <script src="models/pm.js"></script>
 <script src="models/nuc.js"></script>

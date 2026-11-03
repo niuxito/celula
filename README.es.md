@@ -2,7 +2,7 @@
 
 🇬🇧 [English version](README.md)
 
-Visor 3D interactivo de una célula humana real (línea HeLa) reconstruida por microscopía electrónica (FIB-SEM). Muestra la membrana plasmática, el núcleo, el retículo endoplasmático, el aparato de Golgi, 265 mitocondrias con sus medidas, endosomas, vesículas y microtúbulos. Incluye capas, opacidad, búsqueda y fichas en español.
+Visor 3D interactivo de una célula humana real (línea HeLa) reconstruida por microscopía electrónica (FIB-SEM). Muestra la membrana plasmática, el núcleo, el retículo endoplasmático, el aparato de Golgi, 265 mitocondrias con sus medidas, endosomas, vesículas y microtúbulos. Incluye capas, opacidad, búsqueda y fichas. **Disponible en español e inglés**: el idioma se elige según el navegador y se cambia con el botón ES/EN (o con `?lang=es`). Las fichas en inglés son una traducción de las originales en español y no han sido revisadas por especialistas.
 
 ## Cómo usarlo
 
@@ -32,7 +32,9 @@ Para publicarlo en la web basta con subir la carpeta tal cual a cualquier alojam
 | `package.json`, `package-lock.json` | Dependencias y comando para regenerar `app.js` |
 | `fonts/` | Tipografías en local con sus licencias OFL |
 | `herramientas/` | Scripts que prepararon las mallas y las fichas (ver `herramientas/LEEME.md`) |
-| `data/anatomia.js` | Fichas, nombres y organización por sistemas |
+| `src/i18n.js` | Textos de la interfaz por idioma |
+| `data/anatomia.js` | Fichas, nombres y organización por orgánulos |
+| `data/anatomia.en.js` | Capa de traducción al inglés de las fichas (se carga a demanda) |
 | `models/*.js` | Mallas 3D (glTF binario comprimido con meshoptimizer, en base64) |
 | `LICENSE`, `LICENSE-codigo.txt` | Licencia MIT del código |
 | `LICENSE-contenido.md` | Licencia de las mallas y los textos |

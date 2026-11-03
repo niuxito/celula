@@ -360,8 +360,8 @@
       return 0;
     }
   }
-  function lerp(x, y, t) {
-    return (1 - t) * x + t * y;
+  function lerp(x, y, t2) {
+    return (1 - t2) * x + t2 * y;
   }
   function damp(x, y, lambda, dt) {
     return lerp(x, y, 1 - Math.exp(-lambda * dt));
@@ -392,10 +392,10 @@
   }
   function seededRandom(s) {
     if (s !== void 0) _seed = s;
-    let t = _seed += 1831565813;
-    t = Math.imul(t ^ t >>> 15, t | 1);
-    t ^= t + Math.imul(t ^ t >>> 7, t | 61);
-    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    let t2 = _seed += 1831565813;
+    t2 = Math.imul(t2 ^ t2 >>> 15, t2 | 1);
+    t2 ^= t2 + Math.imul(t2 ^ t2 >>> 7, t2 | 61);
+    return ((t2 ^ t2 >>> 14) >>> 0) / 4294967296;
   }
   function degToRad(degrees) {
     return degrees * DEG2RAD;
@@ -1370,7 +1370,7 @@
      * @param {number} t - The interpolation factor. A value in the range `[0,1]` will interpolate. A value outside the range `[0,1]` will extrapolate.
      * @see {@link Quaternion#slerp}
      */
-    static slerpFlat(dst, dstOffset, src0, srcOffset0, src1, srcOffset1, t) {
+    static slerpFlat(dst, dstOffset, src0, srcOffset0, src1, srcOffset1, t2) {
       let x0 = src0[srcOffset0 + 0], y0 = src0[srcOffset0 + 1], z0 = src0[srcOffset0 + 2], w0 = src0[srcOffset0 + 3];
       let x1 = src1[srcOffset1 + 0], y1 = src1[srcOffset1 + 1], z1 = src1[srcOffset1 + 2], w1 = src1[srcOffset1 + 3];
       if (w0 !== w1 || x0 !== x1 || y0 !== y1 || z0 !== z1) {
@@ -1382,21 +1382,21 @@
           w1 = -w1;
           dot = -dot;
         }
-        let s = 1 - t;
+        let s = 1 - t2;
         if (dot < 0.9995) {
           const theta = Math.acos(dot);
           const sin = Math.sin(theta);
           s = Math.sin(s * theta) / sin;
-          t = Math.sin(t * theta) / sin;
-          x0 = x0 * s + x1 * t;
-          y0 = y0 * s + y1 * t;
-          z0 = z0 * s + z1 * t;
-          w0 = w0 * s + w1 * t;
+          t2 = Math.sin(t2 * theta) / sin;
+          x0 = x0 * s + x1 * t2;
+          y0 = y0 * s + y1 * t2;
+          z0 = z0 * s + z1 * t2;
+          w0 = w0 * s + w1 * t2;
         } else {
-          x0 = x0 * s + x1 * t;
-          y0 = y0 * s + y1 * t;
-          z0 = z0 * s + z1 * t;
-          w0 = w0 * s + w1 * t;
+          x0 = x0 * s + x1 * t2;
+          y0 = y0 * s + y1 * t2;
+          z0 = z0 * s + z1 * t2;
+          w0 = w0 * s + w1 * t2;
           const f = 1 / Math.sqrt(x0 * x0 + y0 * y0 + z0 * z0 + w0 * w0);
           x0 *= f;
           y0 *= f;
@@ -1692,8 +1692,8 @@
     rotateTowards(q, step) {
       const angle = this.angleTo(q);
       if (angle === 0) return this;
-      const t = Math.min(1, step / angle);
-      this.slerp(q, t);
+      const t2 = Math.min(1, step / angle);
+      this.slerp(q, t2);
       return this;
     }
     /**
@@ -1822,7 +1822,7 @@
      * @param {number} t - The interpolation factor. A value in the range `[0,1]` will interpolate. A value outside the range `[0,1]` will extrapolate.
      * @return {Quaternion} A reference to this quaternion.
      */
-    slerp(qb, t) {
+    slerp(qb, t2) {
       let x = qb._x, y = qb._y, z = qb._z, w = qb._w;
       let dot = this.dot(qb);
       if (dot < 0) {
@@ -1832,22 +1832,22 @@
         w = -w;
         dot = -dot;
       }
-      let s = 1 - t;
+      let s = 1 - t2;
       if (dot < 0.9995) {
         const theta = Math.acos(dot);
         const sin = Math.sin(theta);
         s = Math.sin(s * theta) / sin;
-        t = Math.sin(t * theta) / sin;
-        this._x = this._x * s + x * t;
-        this._y = this._y * s + y * t;
-        this._z = this._z * s + z * t;
-        this._w = this._w * s + w * t;
+        t2 = Math.sin(t2 * theta) / sin;
+        this._x = this._x * s + x * t2;
+        this._y = this._y * s + y * t2;
+        this._z = this._z * s + z * t2;
+        this._w = this._w * s + w * t2;
         this._onChangeCallback();
       } else {
-        this._x = this._x * s + x * t;
-        this._y = this._y * s + y * t;
-        this._z = this._z * s + z * t;
-        this._w = this._w * s + w * t;
+        this._x = this._x * s + x * t2;
+        this._y = this._y * s + y * t2;
+        this._z = this._z * s + z * t2;
+        this._w = this._w * s + w * t2;
         this.normalize();
       }
       return this;
@@ -1861,8 +1861,8 @@
      * @param {number} t - The interpolation factor in the closed interval `[0, 1]`.
      * @return {Quaternion} A reference to this quaternion.
      */
-    slerpQuaternions(qa, qb, t) {
-      return this.copy(qa).slerp(qb, t);
+    slerpQuaternions(qa, qb, t2) {
+      return this.copy(qa).slerp(qb, t2);
     }
     /**
      * Sets this quaternion to a uniformly random, normalized quaternion.
@@ -5838,9 +5838,9 @@
     makeRotationAxis(axis, angle) {
       const c = Math.cos(angle);
       const s = Math.sin(angle);
-      const t = 1 - c;
+      const t2 = 1 - c;
       const x = axis.x, y = axis.y, z = axis.z;
-      const tx = t * x, ty = t * y;
+      const tx = t2 * x, ty = t2 * y;
       this.set(
         tx * x + c,
         tx * y - s * z,
@@ -5852,7 +5852,7 @@
         0,
         tx * z - s * y,
         ty * z + s * x,
-        t * z * z + c,
+        t2 * z * z + c,
         0,
         0,
         0,
@@ -7905,12 +7905,12 @@
   };
   var _hslA = { h: 0, s: 0, l: 0 };
   var _hslB = { h: 0, s: 0, l: 0 };
-  function hue2rgb(p, q, t) {
-    if (t < 0) t += 1;
-    if (t > 1) t -= 1;
-    if (t < 1 / 6) return p + (q - p) * 6 * t;
-    if (t < 1 / 2) return q;
-    if (t < 2 / 3) return p + (q - p) * 6 * (2 / 3 - t);
+  function hue2rgb(p, q, t2) {
+    if (t2 < 0) t2 += 1;
+    if (t2 > 1) t2 -= 1;
+    if (t2 < 1 / 6) return p + (q - p) * 6 * t2;
+    if (t2 < 1 / 2) return q;
+    if (t2 < 2 / 3) return p + (q - p) * 6 * (2 / 3 - t2);
     return p;
   }
   var Color = class {
@@ -10686,10 +10686,10 @@
       function handleVertex(v) {
         n.fromBufferAttribute(normalAttribute, v);
         n2.copy(n);
-        const t = tan1[v];
-        tmp.copy(t);
-        tmp.sub(n.multiplyScalar(n.dot(t))).normalize();
-        tmp2.crossVectors(n2, t);
+        const t2 = tan1[v];
+        tmp.copy(t2);
+        tmp.sub(n.multiplyScalar(n.dot(t2))).normalize();
+        tmp2.crossVectors(n2, t2);
         const test = tmp2.dot(tan2[v]);
         const w = test < 0 ? -1 : 1;
         tangentAttribute.setXYZW(v, tmp.x, tmp.y, tmp.z, w);
@@ -11620,11 +11620,11 @@
         }
         return null;
       }
-      const t = -(line.start.dot(this.normal) + this.constant) / denominator;
-      if (clampToLine === true && (t < 0 || t > 1)) {
+      const t2 = -(line.start.dot(this.normal) + this.constant) / denominator;
+      if (clampToLine === true && (t2 < 0 || t2 > 1)) {
         return null;
       }
-      return target.copy(line.start).addScaledVector(direction, t);
+      return target.copy(line.start).addScaledVector(direction, t2);
     }
     /**
      * Returns `true` if the given line segment intersects with (passes through) the plane.
@@ -12525,8 +12525,8 @@
      * @param {Vector3} target - The target vector that is used to store the method's result.
      * @return {Vector3} A position on the ray.
      */
-    at(t, target) {
-      return target.copy(this.origin).addScaledVector(this.direction, t);
+    at(t2, target) {
+      return target.copy(this.origin).addScaledVector(this.direction, t2);
     }
     /**
      * Adjusts the direction of the ray to point at the given vector in world space.
@@ -12544,8 +12544,8 @@
      * @param {number} t - The distance along the ray to interpolate.
      * @return {Ray} A reference to this ray.
      */
-    recast(t) {
-      this.origin.copy(this.at(t, _vector$7));
+    recast(t2) {
+      this.origin.copy(this.at(t2, _vector$7));
       return this;
     }
     /**
@@ -12702,8 +12702,8 @@
         }
         return null;
       }
-      const t = -(this.origin.dot(plane.normal) + plane.constant) / denominator;
-      return t >= 0 ? t : null;
+      const t2 = -(this.origin.dot(plane.normal) + plane.constant) / denominator;
+      return t2 >= 0 ? t2 : null;
     }
     /**
      * Intersects this ray with the given plane, returning the intersection
@@ -12714,11 +12714,11 @@
      * @return {?Vector3} The intersection point.
      */
     intersectPlane(plane, target) {
-      const t = this.distanceToPlane(plane);
-      if (t === null) {
+      const t2 = this.distanceToPlane(plane);
+      if (t2 === null) {
         return null;
       }
-      return this.at(t, target);
+      return this.at(t2, target);
     }
     /**
      * Returns `true` if this ray intersects with the given plane.
@@ -15595,17 +15595,17 @@
      * @param {number} t - The interpolation factor.
      * @return {TypedArray} The result buffer.
      */
-    evaluate(t) {
+    evaluate(t2) {
       const pp = this.parameterPositions;
       let i1 = this._cachedIndex, t1 = pp[i1], t0 = pp[i1 - 1];
       validate_interval: {
         seek: {
           let right;
           linear_scan: {
-            forward_scan: if (!(t < t1)) {
+            forward_scan: if (!(t2 < t1)) {
               for (let giveUpAt = i1 + 2; ; ) {
                 if (t1 === void 0) {
-                  if (t < t0) break forward_scan;
+                  if (t2 < t0) break forward_scan;
                   i1 = pp.length;
                   this._cachedIndex = i1;
                   return this.copySampleValue_(i1 - 1);
@@ -15613,16 +15613,16 @@
                 if (i1 === giveUpAt) break;
                 t0 = t1;
                 t1 = pp[++i1];
-                if (t < t1) {
+                if (t2 < t1) {
                   break seek;
                 }
               }
               right = pp.length;
               break linear_scan;
             }
-            if (!(t >= t0)) {
+            if (!(t2 >= t0)) {
               const t1global = pp[1];
-              if (t < t1global) {
+              if (t2 < t1global) {
                 i1 = 2;
                 t0 = t1global;
               }
@@ -15634,7 +15634,7 @@
                 if (i1 === giveUpAt) break;
                 t1 = t0;
                 t0 = pp[--i1 - 1];
-                if (t >= t0) {
+                if (t2 >= t0) {
                   break seek;
                 }
               }
@@ -15646,7 +15646,7 @@
           }
           while (i1 < right) {
             const mid = i1 + right >>> 1;
-            if (t < pp[mid]) {
+            if (t2 < pp[mid]) {
               right = mid;
             } else {
               i1 = mid + 1;
@@ -15667,7 +15667,7 @@
         this._cachedIndex = i1;
         this.intervalChanged_(i1, t0, t1);
       }
-      return this.interpolate_(i1, t0, t, t1);
+      return this.interpolate_(i1, t0, t2, t1);
     }
     /**
      * Returns the interpolation settings.
@@ -15772,8 +15772,8 @@
       this._offsetPrev = iPrev * stride;
       this._offsetNext = iNext * stride;
     }
-    interpolate_(i1, t0, t, t1) {
-      const result = this.resultBuffer, values = this.sampleValues, stride = this.valueSize, o1 = i1 * stride, o0 = o1 - stride, oP = this._offsetPrev, oN = this._offsetNext, wP = this._weightPrev, wN = this._weightNext, p = (t - t0) / (t1 - t0), pp = p * p, ppp = pp * p;
+    interpolate_(i1, t0, t2, t1) {
+      const result = this.resultBuffer, values = this.sampleValues, stride = this.valueSize, o1 = i1 * stride, o0 = o1 - stride, oP = this._offsetPrev, oN = this._offsetNext, wP = this._weightPrev, wN = this._weightNext, p = (t2 - t0) / (t1 - t0), pp = p * p, ppp = pp * p;
       const sP = -wP * ppp + 2 * wP * pp - wP * p;
       const s0 = (1 + wP) * ppp + (-1.5 - 2 * wP) * pp + (-0.5 + wP) * p + 1;
       const s1 = (-1 - wN) * ppp + (1.5 + wN) * pp + 0.5 * p;
@@ -15796,8 +15796,8 @@
     constructor(parameterPositions, sampleValues, sampleSize, resultBuffer) {
       super(parameterPositions, sampleValues, sampleSize, resultBuffer);
     }
-    interpolate_(i1, t0, t, t1) {
-      const result = this.resultBuffer, values = this.sampleValues, stride = this.valueSize, offset1 = i1 * stride, offset0 = offset1 - stride, weight1 = (t - t0) / (t1 - t0), weight0 = 1 - weight1;
+    interpolate_(i1, t0, t2, t1) {
+      const result = this.resultBuffer, values = this.sampleValues, stride = this.valueSize, offset1 = i1 * stride, offset0 = offset1 - stride, weight1 = (t2 - t0) / (t1 - t0), weight0 = 1 - weight1;
       for (let i = 0; i !== stride; ++i) {
         result[i] = values[offset0 + i] * weight0 + values[offset1 + i] * weight1;
       }
@@ -15821,7 +15821,7 @@
     }
   };
   var BezierInterpolant = class extends Interpolant {
-    interpolate_(i1, t0, t, t1) {
+    interpolate_(i1, t0, t2, t1) {
       const result = this.resultBuffer;
       const values = this.sampleValues;
       const stride = this.valueSize;
@@ -15830,7 +15830,7 @@
       const inTangents = this.inTangents;
       const outTangents = this.outTangents;
       if (!inTangents || !outTangents) {
-        const weight1 = (t - t0) / (t1 - t0);
+        const weight1 = (t2 - t0) / (t1 - t0);
         const weight0 = 1 - weight1;
         for (let i = 0; i !== stride; ++i) {
           result[i] = values[offset0 + i] * weight0 + values[offset1 + i] * weight1;
@@ -15848,7 +15848,7 @@
         const inTangentOffset = i1 * tangentStride + i * 2;
         const c1x = inTangents[inTangentOffset];
         const c1y = inTangents[inTangentOffset + 1];
-        const s = solveBezierParameter(t, t0, c0x, c1x, t1);
+        const s = solveBezierParameter(t2, t0, c0x, c1x, t1);
         result[i] = cubicBezier(s, v0, c0y, c1y, v1);
       }
       return result;
@@ -16289,8 +16289,8 @@
     constructor(parameterPositions, sampleValues, sampleSize, resultBuffer) {
       super(parameterPositions, sampleValues, sampleSize, resultBuffer);
     }
-    interpolate_(i1, t0, t, t1) {
-      const result = this.resultBuffer, values = this.sampleValues, stride = this.valueSize, alpha = (t - t0) / (t1 - t0);
+    interpolate_(i1, t0, t2, t1) {
+      const result = this.resultBuffer, values = this.sampleValues, stride = this.valueSize, alpha = (t2 - t0) / (t1 - t0);
       let offset = i1 * stride;
       for (let end = offset + stride; offset !== end; offset += 4) {
         Quaternion.slerpFlat(result, 0, values, offset - stride, values, offset, alpha);
@@ -26685,9 +26685,9 @@
               _htmlTextures.add(texture);
               canvas.onpaint = (event) => {
                 const changed = event.changedElements;
-                for (const t of _htmlTextures) {
-                  if (changed.includes(t.image)) {
-                    t.needsUpdate = true;
+                for (const t2 of _htmlTextures) {
+                  if (changed.includes(t2.image)) {
+                    t2.needsUpdate = true;
                   }
                 }
               };
@@ -32815,14 +32815,14 @@ void main() {
       }
       return result;
     }
-    interpolate_(i1, t0, t, t1) {
+    interpolate_(i1, t0, t2, t1) {
       const result = this.resultBuffer;
       const values = this.sampleValues;
       const stride = this.valueSize;
       const stride2 = stride * 2;
       const stride3 = stride * 3;
       const td = t1 - t0;
-      const p = (t - t0) / td;
+      const p = (t2 - t0) / td;
       const pp = p * p;
       const ppp = pp * p;
       const offset1 = i1 * stride3;
@@ -32843,8 +32843,8 @@ void main() {
   };
   var _quaternion = new Quaternion();
   var GLTFCubicSplineQuaternionInterpolant = class extends GLTFCubicSplineInterpolant {
-    interpolate_(i1, t0, t, t1) {
-      const result = super.interpolate_(i1, t0, t, t1);
+    interpolate_(i1, t0, t2, t1) {
+      const result = super.interpolate_(i1, t0, t2, t1);
       _quaternion.fromArray(result).normalize().toArray(result);
       return result;
     }
@@ -34717,12 +34717,204 @@ void main() {
     return material;
   }
 
+  // src/i18n.js
+  var LANGS = ["es", "en"];
+  var LANG_NAMES = { es: "Espa\xF1ol", en: "English" };
+  function detectLang() {
+    const q = new URLSearchParams(location.search).get("lang");
+    if (LANGS.includes(q)) return q;
+    try {
+      const s = localStorage.getItem("lang");
+      if (LANGS.includes(s)) return s;
+    } catch (e) {
+    }
+    const nav = (navigator.languages || [navigator.language || "es"]).map((l) => l.slice(0, 2).toLowerCase());
+    return nav.find((l) => LANGS.includes(l)) || "en";
+  }
+  var A = (href, txt) => `<a href="${href}" target="_blank" rel="noopener">${txt}</a>`;
+  var DS = "https://openorganelle.janelia.org/datasets/jrc_hela-2";
+  var HEINRICH = "https://doi.org/10.1038/s41586-021-03977-3";
+  var XU = "https://doi.org/10.1038/s41586-021-03992-4";
+  var STR = {
+    es: {
+      title: "C\xE9lula humana en capas",
+      metaDesc: "Visor 3D interactivo de una c\xE9lula HeLa real reconstruida por microscop\xEDa electr\xF3nica (OpenOrganelle): 265 mitocondrias, ret\xEDculo, Golgi, n\xFAcleo y m\xE1s, en capas. Disponible en espa\xF1ol e ingl\xE9s.",
+      brand: "C\xE9lula humana <em>en capas</em>",
+      langLabel: "Idioma",
+      views: "Vistas",
+      top: "Superior",
+      bottom: "Desde el sustrato",
+      front: "Frontal",
+      right: "Lateral",
+      spin: "Girar",
+      reset: "Restablecer",
+      panelLayers: "Capas y org\xE1nulos",
+      panelCard: "Ficha de la estructura",
+      tabs: "Paneles",
+      tabModel: "Modelo",
+      tabLayers: "Capas",
+      tabCard: "Ficha",
+      searchPh: "Buscar org\xE1nulo (p. ej. \xABmitocondria\xBB, \xABGolgi\xBB)",
+      search: "Buscar estructura",
+      peel: "Pelar capas",
+      peelAll: "Todo",
+      peelMembrane: "Sin membrana",
+      peelOrganelles: "Org\xE1nulos",
+      peelNucleus: "N\xFAcleo",
+      loading: "Cargando modelo de la c\xE9lula\u2026",
+      credit: `Datos: ${A(DS, "OpenOrganelle jrc_hela-2")} \xB7 Heinrich et al. (2021), Xu et al. (2021), <i>Nature</i> \xB7 HHMI Janelia \xB7 ${A("https://creativecommons.org/licenses/by/4.0/deed.es", "CC BY 4.0")} \xB7 simplificado para web \xB7 ${A("https://github.com/niuxito/celula", "c\xF3digo en GitHub")}`,
+      sideD: "Lado derecho",
+      sideI: "Lado izquierdo",
+      sideDs: "dcho.",
+      sideIs: "izq.",
+      stats: (mito, c) => `C\xE9lula HeLa \xB7 ${mito} mitocondrias \xB7 ${c} tipos de org\xE1nulo \xB7 FIB-SEM`,
+      systemReady: (name, d, total) => `${name} listo (${d}/${total})`,
+      modelDone: "Modelo completo",
+      errSystem: (name) => `No se pudo cargar ${name}.`,
+      errData: (msg) => `Error al cargar los datos: ${msg}`,
+      toggleSys: (name) => `Mostrar u ocultar ${name}`,
+      showGroup: (name) => `Mostrar ${name}`,
+      opacity: "Opacidad",
+      noResults: "Sin resultados",
+      howTo: "C\xF3mo usarlo",
+      selectAny: "Selecciona cualquier org\xE1nulo de la c\xE9lula",
+      how1: "Arrastra para girar, rueda o pellizca para acercar y clic derecho para desplazar.",
+      how2: "Haz clic en un org\xE1nulo para ver su nombre y su ficha. Cada mitocondria tiene sus propias medidas.",
+      how3: "Usa <b>Pelar capas</b> o el ojo de cada org\xE1nulo para retirar la membrana y ver el interior; ajusta la opacidad para ver a trav\xE9s.",
+      how4: "Atajos: <kbd>Esc</kbd> deseleccionar \xB7 <kbd>F</kbd> enfocar \xB7 <kbd>H</kbd> ocultar \xB7 <kbd>I</kbd> aislar",
+      systemsIncluded: "Org\xE1nulos incluidos",
+      aboutTitle: "Acerca del modelo y su rigor",
+      about: `<p>No es un dibujo: es una c\xE9lula real. Las formas proceden del conjunto de datos ${A(DS, "jrc_hela-2 de OpenOrganelle")} (HHMI Janelia). Es una c\xE9lula HeLa humana en interfase, congelada a alta presi\xF3n y escaneada entera por microscop\xEDa electr\xF3nica de barrido con haz de iones focalizado (FIB-SEM), con v\xF3xeles de 4 \xD7 4 \xD7 5,24 nm. Los org\xE1nulos fueron segmentados con redes neuronales y revisados por el equipo COSEM: ${A(HEINRICH, "Heinrich et al., <i>Nature</i> 2021")}; imagen: ${A(XU, "Xu et al., <i>Nature</i> 2021")}.</p>
+        <p><b>Qu\xE9 se ha hecho para este visor.</b></p>
+        <ul><li>Se han usado los niveles de detalle intermedios de las mallas originales y se han simplificado para la web. Las formas y posiciones son las reales; el detalle fino de las membranas es menor que en el original.</li>
+        <li>El volumen escaneado incluye trozos de c\xE9lulas vecinas. Aqu\xED solo se muestran la membrana, el n\xFAcleo y los org\xE1nulos de la c\xE9lula central, separados autom\xE1ticamente seg\xFAn su posici\xF3n.</li>
+        <li>Las medidas de cada mitocondria y del n\xFAcleo se han calculado sobre las mallas del visor y son aproximadas.</li>
+        <li>Las 26.364 ves\xEDculas de la c\xE9lula se muestran con su forma y posici\xF3n reales, pero muy simplificadas por su n\xFAmero.</li>
+        <li>Los colores son convencionales: en la microscop\xEDa electr\xF3nica no hay color.</li></ul>
+        <p>Licencia de los datos: ${A("https://doi.org/10.25378/janelia.13108343", "CC BY 4.0")} (Janelia Research Campus).</p>
+        <p><b>Qu\xE9 no aparece.</b> Ribosomas, filamentos de actina y filamentos intermedios, centrosoma, nucl\xE9olo, poros nucleares y lisosomas como clase aparte. Est\xE1n en la c\xE9lula, pero no forman parte de las mallas publicadas de este conjunto de datos. Por eso el citoplasma parece vac\xEDo, aunque en realidad est\xE1 abarrotado de prote\xEDnas.</p>
+        <p><b>Sobre las c\xE9lulas HeLa.</b> Proceden de un tumor de cuello uterino de Henrietta Lacks, extra\xEDdo en 1951 sin su consentimiento, como era habitual entonces. Son la primera l\xEDnea celular humana inmortal y han sido clave en avances como la vacuna de la polio.</p>
+        <p><b>Uso educativo.</b> Las fichas no han sido revisadas por especialistas; un docente deber\xEDa revisarlas antes de usarlas en el aula.</p>`,
+      focus: "Enfocar",
+      isolate: "Aislar",
+      showAll: "Ver todo",
+      hide: "Ocultar",
+      dimRest: "Atenuar el resto de la c\xE9lula",
+      source: (id) => `Fuente: OpenOrganelle jrc_hela-2 (HHMI Janelia) \xB7 pieza ${id}`,
+      factKey: (k) => k,
+      factVal: (v) => v,
+      num: (n) => n
+    },
+    en: {
+      title: "Layered Human Cell",
+      metaDesc: "Interactive 3D viewer of a real HeLa cell reconstructed by electron microscopy (OpenOrganelle): 265 mitochondria, ER, Golgi, nucleus and more, in layers. Available in Spanish and English.",
+      brand: "Layered <em>human cell</em>",
+      langLabel: "Language",
+      views: "Views",
+      top: "Top",
+      bottom: "From the substrate",
+      front: "Front",
+      right: "Side",
+      spin: "Rotate",
+      reset: "Reset",
+      panelLayers: "Layers and organelles",
+      panelCard: "Structure card",
+      tabs: "Panels",
+      tabModel: "Model",
+      tabLayers: "Layers",
+      tabCard: "Card",
+      searchPh: 'Search organelle (e.g. "mitochondrion", "Golgi")',
+      search: "Search structure",
+      peel: "Peel layers",
+      peelAll: "All",
+      peelMembrane: "No membrane",
+      peelOrganelles: "Organelles",
+      peelNucleus: "Nucleus",
+      loading: "Loading cell model\u2026",
+      credit: `Data: ${A(DS, "OpenOrganelle jrc_hela-2")} \xB7 Heinrich et al. (2021), Xu et al. (2021), <i>Nature</i> \xB7 HHMI Janelia \xB7 ${A("https://creativecommons.org/licenses/by/4.0/deed.en", "CC BY 4.0")} \xB7 simplified for the web \xB7 ${A("https://github.com/niuxito/celula", "code on GitHub")}`,
+      sideD: "Right side",
+      sideI: "Left side",
+      sideDs: "R",
+      sideIs: "L",
+      stats: (mito, c) => `HeLa cell \xB7 ${mito} mitochondria \xB7 ${c} organelle types \xB7 FIB-SEM`,
+      systemReady: (name, d, total) => `${name} ready (${d}/${total})`,
+      modelDone: "Model complete",
+      errSystem: (name) => `Could not load ${name}.`,
+      errData: (msg) => `Error loading data: ${msg}`,
+      toggleSys: (name) => `Show or hide ${name}`,
+      showGroup: (name) => `Show ${name}`,
+      opacity: "Opacity",
+      noResults: "No results",
+      howTo: "How to use it",
+      selectAny: "Select any organelle of the cell",
+      how1: "Drag to rotate, scroll or pinch to zoom, and right-click to pan.",
+      how2: "Click an organelle to see its name and its card. Each mitochondrion has its own measurements.",
+      how3: "Use <b>Peel layers</b> or the eye on each organelle to remove the membrane and see inside; adjust opacity to see through.",
+      how4: "Shortcuts: <kbd>Esc</kbd> deselect \xB7 <kbd>F</kbd> focus \xB7 <kbd>H</kbd> hide \xB7 <kbd>I</kbd> isolate",
+      systemsIncluded: "Organelles included",
+      aboutTitle: "About the model and its rigor",
+      about: `<p>This is not a drawing: it is a real cell. The shapes come from the ${A(DS, "OpenOrganelle jrc_hela-2")} dataset (HHMI Janelia). It is a human HeLa cell in interphase, high-pressure frozen and scanned whole by focused ion beam scanning electron microscopy (FIB-SEM), with 4 \xD7 4 \xD7 5.24 nm voxels. The organelles were segmented with neural networks and reviewed by the COSEM team: ${A(HEINRICH, "Heinrich et al., <i>Nature</i> 2021")}; imaging: ${A(XU, "Xu et al., <i>Nature</i> 2021")}.</p>
+        <p><b>What was done for this viewer.</b></p>
+        <ul><li>Intermediate levels of detail of the original meshes were used and simplified for the web. Shapes and positions are real; the fine detail of the membranes is lower than in the original.</li>
+        <li>The scanned volume includes pieces of neighboring cells. Only the membrane, nucleus and organelles of the central cell are shown here, separated automatically by position.</li>
+        <li>The measurements of each mitochondrion and of the nucleus were computed on the viewer's meshes and are approximate.</li>
+        <li>The cell's 26,364 vesicles are shown with their real shape and position, but heavily simplified because of their number.</li>
+        <li>Colors are conventional: electron microscopy has no color.</li></ul>
+        <p>Data license: ${A("https://doi.org/10.25378/janelia.13108343", "CC BY 4.0")} (Janelia Research Campus).</p>
+        <p><b>What is not shown.</b> Ribosomes, actin and intermediate filaments, centrosome, nucleolus, nuclear pores and lysosomes as a separate class. They are in the cell, but they are not part of the published meshes of this dataset. That is why the cytoplasm looks empty, although it is actually packed with proteins.</p>
+        <p><b>About HeLa cells.</b> They come from a cervical tumor of Henrietta Lacks, removed in 1951 without her consent, as was common at the time. They are the first immortal human cell line and have been key to advances such as the polio vaccine.</p>
+        <p><b>Educational use.</b> The cards have not been reviewed by specialists; a teacher should review them before classroom use. The cards were written in Spanish; the English cards are a translation.</p>`,
+      focus: "Focus",
+      isolate: "Isolate",
+      showAll: "Show all",
+      hide: "Hide",
+      dimRest: "Dim the rest of the cell",
+      source: (id) => `Source: OpenOrganelle jrc_hela-2 (HHMI Janelia) \xB7 piece ${id}`,
+      // Datos medidos que viajan en español en data/anatomia.js (campos y valores de cada pieza)
+      factKey: (k) => ({
+        "Tama\xF1o en esta c\xE9lula": "Size in this cell",
+        "Volumen medido": "Measured volume",
+        "Esta mitocondria": "This mitochondrion",
+        "Longitud": "Length",
+        "Volumen": "Volume",
+        "Piezas en esta c\xE9lula": "Pieces in this cell"
+      })[k] ?? k,
+      factVal: (v) => v.replace(/^n\.º (\d+) de (\d+) \(ordenadas de mayor a menor longitud\)$/, "No. $1 of $2 (sorted longest to shortest)").replace(/(\d),(\d)/g, "$1.$2").replace(/^\d{1,3}(\.\d{3})+$/, (m) => m.replace(/\./g, ",")),
+      num: (n) => n.replace(/^n\.º\s*/, "No. ")
+    }
+  };
+
   // src/visor.js
   var $ = (s) => document.querySelector(s);
   var esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
   var norm = (s) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-  var SIDE = { D: "Lado derecho", I: "Lado izquierdo", "": "" };
-  var SIDE_SHORT = { D: "dcho.", I: "izq.", "": "" };
+  var lang = detectLang();
+  var t = (k, ...a) => {
+    const v = STR[lang][k] ?? STR.es[k];
+    return typeof v === "function" ? v(...a) : v;
+  };
+  var SIDE = { get D() {
+    return t("sideD");
+  }, get I() {
+    return t("sideI");
+  }, "": "" };
+  var SIDE_SHORT = { get D() {
+    return t("sideDs");
+  }, get I() {
+    return t("sideIs");
+  }, "": "" };
+  var numL = (p) => p.num ? t("num", p.num) : "";
+  var factsOf = (P) => (P.p.pf || []).map(([k, v]) => [t("factKey", k), t("factVal", v)]).concat(CONC[P.p.c].f);
+  function loadOverlay(l) {
+    if (l === "es" || (window.ANAT_I18N || {})[l]) return Promise.resolve();
+    return new Promise((ok, fail) => {
+      const sc = document.createElement("script");
+      sc.src = `data/anatomia.${l}.js`;
+      sc.onload = ok;
+      sc.onerror = fail;
+      document.head.appendChild(sc);
+    });
+  }
   var stage = $("#stage");
   var renderer = new WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
@@ -34790,6 +34982,8 @@ void main() {
   var SYS = {};
   var CONC;
   var PARTS = {};
+  var BASE_SYS;
+  var BASE_CONC;
   var matCache = /* @__PURE__ */ new Map();
   var sysState = {};
   var hiddenGroups = /* @__PURE__ */ new Set();
@@ -34854,7 +35048,7 @@ void main() {
     const P = PARTS[id];
     const c = CONC[P.p.c];
     if (isolated) return isolated.has(id);
-    return sysState[c.s].on && !hiddenGroups.has(c.s + "|" + c.g) && !hiddenParts.has(id);
+    return sysState[c.s].on && !hiddenGroups.has(c.s + "|" + c.gk) && !hiddenParts.has(id);
   }
   function applyVisibility() {
     for (const id in PARTS) {
@@ -34870,14 +35064,21 @@ void main() {
   async function boot() {
     DATA2 = window.ANAT_DATA;
     ORDER = ORDER.filter((k) => DATA2.files[k]);
-    CONC = DATA2.concepts;
-    DATA2.systems.forEach((s) => {
-      SYS[s.k] = s;
+    BASE_SYS = DATA2.systems;
+    BASE_CONC = DATA2.concepts;
+    BASE_CONC.forEach((c) => c.gk = c.g);
+    BASE_SYS.forEach((s) => {
       sysState[s.k] = { on: true, op: s.k === "pm" ? 0.2 : s.k === "er" ? 0.35 : 1 };
     });
     DATA2.parts.forEach((p) => PARTS[p.id] = { p, mesh: null });
-    const nConc = new Set(DATA2.parts.map((p) => p.c)).size;
-    $("#stats").innerHTML = `C\xE9lula HeLa \xB7 ${DATA2.meta.mito} mitocondrias \xB7 ${nConc} tipos de org\xE1nulo \xB7 FIB-SEM`;
+    try {
+      await loadOverlay(lang);
+    } catch (e) {
+      console.warn("Sin traducci\xF3n para", lang);
+      lang = "es";
+    }
+    localize();
+    applyStatic();
     buildSystemsUI();
     renderInfo();
     applyOpacity();
@@ -34891,7 +35092,7 @@ void main() {
     let done = 0;
     async function fetchModel(sk) {
       const txt = (window.ANAT_MODELS || {})[sk];
-      if (!txt) throw new Error("falta models/" + sk + ".js");
+      if (!txt) throw new Error("missing models/" + sk + ".js");
       const bin = Uint8Array.from(atob(txt), (c) => c.charCodeAt(0));
       progress[sk] = DATA2.files[sk].bytes;
       upd();
@@ -34916,29 +35117,96 @@ void main() {
         progress[sk] = DATA2.files[sk].bytes;
         upd();
         done++;
-        $("#ltxt").textContent = `Sistema ${SYS[sk].n.toLowerCase()} listo (${done}/${ORDER.length})`;
+        $("#ltxt").textContent = t("systemReady", SYS[sk].n, done, ORDER.length);
       } catch (err) {
         $("#err").hidden = false;
-        $("#err").textContent = "No se pudo cargar el sistema " + SYS[sk].n + ".";
+        $("#err").textContent = t("errSystem", SYS[sk].n);
         console.error(err);
       }
     }));
     applyOpacity();
-    $("#ltxt").textContent = "Modelo completo";
+    $("#ltxt").textContent = t("modelDone");
     setTimeout(() => $("#loader").classList.add("done"), 700);
   }
   var EYE = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>';
   var EYE_OFF = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3l18 18M10.6 5.1A10 10 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4M6.2 6.3C3.6 8 2 12 2 12s3.6 7 10 7a9.6 9.6 0 0 0 4.3-1"/></svg>';
+  function localize() {
+    const ov = (window.ANAT_I18N || {})[lang] || {};
+    DATA2.systems = BASE_SYS.map((s) => ({ ...s, ...(ov.systems || {})[s.k] || {} }));
+    DATA2.systems.forEach((s) => SYS[s.k] = s);
+    CONC = DATA2.concepts = BASE_CONC.map((c, i) => {
+      const o = (ov.concepts || [])[i];
+      return o ? { ...c, n: o[0], g: o[1], d: o[2], f: o[3] || [] } : c;
+    });
+  }
+  function applyStatic() {
+    document.documentElement.lang = lang;
+    document.title = t("title");
+    document.querySelectorAll("[data-i18n]").forEach((el) => {
+      el.textContent = t(el.dataset.i18n);
+    });
+    document.querySelectorAll("[data-i18n-html]").forEach((el) => {
+      el.innerHTML = t(el.dataset.i18nHtml);
+    });
+    document.querySelectorAll("[data-i18n-attr]").forEach((el) => el.dataset.i18nAttr.split(";").forEach((p) => {
+      const [a, k] = p.split(":");
+      el.setAttribute(a, t(k));
+    }));
+    const next = LANGS[(LANGS.indexOf(lang) + 1) % LANGS.length];
+    $("#lang").textContent = next.toUpperCase();
+    $("#lang").title = LANG_NAMES[next];
+    if (DATA2) {
+      const nConc = new Set(DATA2.parts.map((p) => p.c)).size;
+      $("#stats").textContent = t("stats", DATA2.meta.mito, nConc);
+    }
+  }
+  async function setLang(l) {
+    try {
+      await loadOverlay(l);
+    } catch (e) {
+      console.warn("Sin traducci\xF3n para", l);
+      return;
+    }
+    lang = l;
+    try {
+      localStorage.setItem("lang", l);
+    } catch (e) {
+    }
+    const openSys = [...document.querySelectorAll(".sys.open")].map((el) => el.dataset.sys);
+    const openGrp = [...document.querySelectorAll(".grp.open")].map((el) => el.dataset.gid);
+    localize();
+    applyStatic();
+    buildSystemsUI();
+    openSys.forEach((k) => {
+      const el = document.querySelector(`.sys[data-sys="${k}"]`);
+      if (el) {
+        el.classList.add("open");
+        el.querySelector(".sysname").setAttribute("aria-expanded", "true");
+      }
+    });
+    openGrp.forEach((g) => document.querySelector(`.grp[data-gid="${CSS.escape(g)}"] .grow button`)?.click());
+    if (selected) {
+      const P = PARTS[selected], c = CONC[P.p.c];
+      $("#label .ln").textContent = c.n + (P.p.num ? " " + numL(P.p) : "");
+      $("#label .ls").textContent = [SYS[c.s].n, SIDE[P.p.sd]].filter(Boolean).join(" \xB7 ");
+    }
+    renderInfo();
+    refreshListStates();
+    if ($("#q").value) $("#q").dispatchEvent(new Event("input"));
+  }
+  $("#lang").addEventListener("click", () => setLang(LANGS[(LANGS.indexOf(lang) + 1) % LANGS.length]));
   var CHEV = '<svg class="chev" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m9 6 6 6-6 6"/></svg>';
   function buildSystemsUI() {
     const box = $("#systems");
     box.innerHTML = "";
     for (const s of DATA2.systems) {
       const parts = DATA2.parts.filter((p) => CONC[p.c].s === s.k);
-      const groups = {};
+      const groups = {}, gname = {};
       parts.forEach((p) => {
         var _a;
-        return (groups[_a = CONC[p.c].g] || (groups[_a] = [])).push(p);
+        const c = CONC[p.c];
+        (groups[_a = c.gk] || (groups[_a] = [])).push(p);
+        gname[c.gk] = c.g;
       });
       const el = document.createElement("div");
       el.className = "sys";
@@ -34946,15 +35214,16 @@ void main() {
       el.innerHTML = `<div class="sysrow"><span class="sw" style="background:${s.c}"></span>
       <button class="sysname" aria-expanded="false">${CHEV}${esc(s.n)}</button>
       <span class="count">${parts.length}</span>
-      <button class="eye" aria-pressed="true" aria-label="Mostrar u ocultar ${esc(s.n)}">${EYE}</button></div>
-      <div class="oprow"><label for="op-${s.k}">Opacidad</label><input type="range" id="op-${s.k}" min="0" max="100" value="${Math.round(sysState[s.k].op * 100)}" style="--c:${s.c}"><output>${Math.round(sysState[s.k].op * 100)} %</output></div>
+      <button class="eye" aria-pressed="true" aria-label="${esc(t("toggleSys", s.n))}">${EYE}</button></div>
+      <div class="oprow"><label for="op-${s.k}">${t("opacity")}</label><input type="range" id="op-${s.k}" min="0" max="100" value="${Math.round(sysState[s.k].op * 100)}" style="--c:${s.c}"><output>${Math.round(sysState[s.k].op * 100)} %</output></div>
       <div class="groups"></div>`;
       const gbox = el.querySelector(".groups");
-      Object.keys(groups).sort((a, b) => a.localeCompare(b, "es")).forEach((g) => {
+      Object.keys(groups).sort((a, b) => gname[a].localeCompare(gname[b], lang)).forEach((g) => {
         const gid = s.k + "|" + g;
         const ge = document.createElement("div");
         ge.className = "grp";
-        ge.innerHTML = `<div class="grow"><input type="checkbox" checked aria-label="Mostrar ${esc(g)}"><button>${esc(g)}</button><span class="count">${groups[g].length}</span></div><div class="plist"></div>`;
+        ge.dataset.gid = gid;
+        ge.innerHTML = `<div class="grow"><input type="checkbox" ${hiddenGroups.has(gid) ? "" : "checked"} aria-label="${esc(t("showGroup", gname[g]))}"><button>${esc(gname[g])}</button><span class="count">${groups[g].length}</span></div><div class="plist"></div>`;
         ge.querySelector("input").addEventListener("change", (e) => {
           e.target.checked ? hiddenGroups.delete(gid) : hiddenGroups.add(gid);
           exitIsolate();
@@ -34963,7 +35232,7 @@ void main() {
         ge.querySelector("button").addEventListener("click", () => {
           const pl = ge.querySelector(".plist");
           if (!pl.childElementCount) {
-            groups[g].sort((a, b) => CONC[a.c].n.localeCompare(CONC[b.c].n, "es") || (a.num || "").localeCompare(b.num || "", "es", { numeric: true }) || a.sd.localeCompare(b.sd)).forEach((p) => pl.appendChild(partButton(p)));
+            groups[g].sort((a, b) => CONC[a.c].n.localeCompare(CONC[b.c].n, lang) || (a.num || "").localeCompare(b.num || "", lang, { numeric: true }) || a.sd.localeCompare(b.sd)).forEach((p) => pl.appendChild(partButton(p)));
             refreshListStates();
           }
           ge.classList.toggle("open");
@@ -34994,7 +35263,7 @@ void main() {
     const b = document.createElement("button");
     b.className = "pitem";
     b.dataset.id = p.id;
-    b.innerHTML = `<span class="dot" style="background:${p.col}"></span><span>${esc(CONC[p.c].n)}</span><span class="sd">${esc(p.num || SIDE_SHORT[p.sd])}</span>`;
+    b.innerHTML = `<span class="dot" style="background:${p.col}"></span><span>${esc(CONC[p.c].n)}</span><span class="sd">${esc(numL(p) || SIDE_SHORT[p.sd])}</span>`;
     b.addEventListener("click", () => {
       select(p.id, null, true);
       showTab("right");
@@ -35043,10 +35312,10 @@ void main() {
     }
     const words = q.split(/\s+/);
     const hits = DATA2.parts.filter((p) => {
-      const h = norm(CONC[p.c].n + " " + (p.num || "") + " " + CONC[p.c].g);
+      const h = norm(CONC[p.c].n + " " + (p.num || "") + " " + numL(p) + " " + CONC[p.c].g + " " + BASE_CONC[p.c].n);
       return words.every((w) => h.includes(w));
     }).sort((a, b) => norm(CONC[a.c].n).indexOf(words[0]) - norm(CONC[b.c].n).indexOf(words[0]) || CONC[a.c].n.length - CONC[b.c].n.length).slice(0, 40);
-    box.innerHTML = hits.length ? "" : '<div class="eyebrow" style="padding:10px 8px">Sin resultados</div>';
+    box.innerHTML = hits.length ? "" : `<div class="eyebrow" style="padding:10px 8px">${t("noResults")}</div>`;
     hits.forEach((p) => box.appendChild(partButton(p)));
     box.hidden = false;
     $("#systems").hidden = true;
@@ -35056,27 +35325,18 @@ void main() {
     const box = $("#info");
     if (!selected) {
       box.innerHTML = `<div class="empty" style="display:flex;flex-direction:column;gap:14px">
-      <div class="eyebrow">C\xF3mo usarlo</div>
-      <h2>Selecciona cualquier org\xE1nulo de la c\xE9lula</h2>
+      <div class="eyebrow">${t("howTo")}</div>
+      <h2>${t("selectAny")}</h2>
       <ul class="howto">
-        <li><span>\u2460</span><span>Arrastra para girar, rueda o pellizca para acercar y clic derecho para desplazar.</span></li>
-        <li><span>\u2461</span><span>Haz clic en un org\xE1nulo para ver su nombre y su ficha. Cada mitocondria tiene sus propias medidas.</span></li>
-        <li><span>\u2462</span><span>Usa <b>Pelar capas</b> o el ojo de cada org\xE1nulo para retirar la membrana y ver el interior; ajusta la opacidad para ver a trav\xE9s.</span></li>
-        <li><span>\u2463</span><span>Atajos: <kbd>Esc</kbd> deseleccionar \xB7 <kbd>F</kbd> enfocar \xB7 <kbd>H</kbd> ocultar \xB7 <kbd>I</kbd> aislar</span></li>
+        <li><span>\u2460</span><span>${t("how1")}</span></li>
+        <li><span>\u2461</span><span>${t("how2")}</span></li>
+        <li><span>\u2462</span><span>${t("how3")}</span></li>
+        <li><span>\u2463</span><span>${t("how4")}</span></li>
       </ul>
-      <div class="eyebrow" style="margin-top:6px">Org\xE1nulos incluidos</div>
+      <div class="eyebrow" style="margin-top:6px">${t("systemsIncluded")}</div>
       <div class="syslist">${DATA2.systems.map((s2) => `<div><span class="sw" style="background:${s2.c}"></span><span><b>${esc(s2.n)}.</b> ${esc(s2.d)}</span></div>`).join("")}</div>
-      <details class="about"><summary>Acerca del modelo y su rigor</summary>
-        <p>No es un dibujo: es una c\xE9lula real. Las formas proceden del conjunto de datos <a href="https://openorganelle.janelia.org/datasets/jrc_hela-2" target="_blank" rel="noopener">jrc_hela-2 de OpenOrganelle</a> (HHMI Janelia). Es una c\xE9lula HeLa humana en interfase, congelada a alta presi\xF3n y escaneada entera por microscop\xEDa electr\xF3nica de barrido con haz de iones focalizado (FIB-SEM), con v\xF3xeles de 4 \xD7 4 \xD7 5,24 nm. Los org\xE1nulos fueron segmentados con redes neuronales y revisados por el equipo COSEM: <a href="https://doi.org/10.1038/s41586-021-03977-3" target="_blank" rel="noopener">Heinrich et al., <i>Nature</i> 2021</a>; imagen: <a href="https://doi.org/10.1038/s41586-021-03992-4" target="_blank" rel="noopener">Xu et al., <i>Nature</i> 2021</a>.</p>
-        <p><b>Qu\xE9 se ha hecho para este visor.</b></p>
-        <ul><li>Se han usado los niveles de detalle intermedios de las mallas originales y se han simplificado para la web. Las formas y posiciones son las reales; el detalle fino de las membranas es menor que en el original.</li>
-        <li>El volumen escaneado incluye trozos de c\xE9lulas vecinas. Aqu\xED solo se muestran la membrana, el n\xFAcleo y los org\xE1nulos de la c\xE9lula central, separados autom\xE1ticamente seg\xFAn su posici\xF3n.</li>
-        <li>Las medidas de cada mitocondria y del n\xFAcleo se han calculado sobre las mallas del visor y son aproximadas.</li>
-        <li>Las 26.364 ves\xEDculas de la c\xE9lula se muestran con su forma y posici\xF3n reales, pero muy simplificadas por su n\xFAmero.</li>
-        <li>Los colores son convencionales: en la microscop\xEDa electr\xF3nica no hay color.</li></ul>
-        <p>Licencia de los datos: <a href="https://doi.org/10.25378/janelia.13108343" target="_blank" rel="noopener">CC BY 4.0</a> (Janelia Research Campus).</p>
-        <p><b>Qu\xE9 no aparece.</b> Ribosomas, filamentos de actina y filamentos intermedios, centrosoma, nucl\xE9olo, poros nucleares y lisosomas como clase aparte. Est\xE1n en la c\xE9lula, pero no forman parte de las mallas publicadas de este conjunto de datos. Por eso el citoplasma parece vac\xEDo, aunque en realidad est\xE1 abarrotado de prote\xEDnas.</p>
-        <p><b>Sobre las c\xE9lulas HeLa.</b> Proceden de un tumor de cuello uterino de Henrietta Lacks, extra\xEDdo en 1951 sin su consentimiento, como era habitual entonces. Son la primera l\xEDnea celular humana inmortal y han sido clave en avances como la vacuna de la polio.</p>
+      <details class="about"><summary>${t("aboutTitle")}</summary>
+        ${t("about")}
       </details></div>`;
       return;
     }
@@ -35084,11 +35344,11 @@ void main() {
     box.innerHTML = `<div class="tags"><span class="tag"><span class="sw" style="background:${s.c}"></span>${esc(s.n)}</span>${P.p.sd ? `<span class="tag">${SIDE[P.p.sd]}</span>` : ""}</div>
     <h2>${esc(c.n)}</h2>
     <div class="grpname">${esc(c.g)}</div>
-    <div class="actions"><button class="btn primary" data-act="focus">Enfocar</button><button class="btn" data-act="iso">${isolated ? "Ver todo" : "Aislar"}</button><button class="btn" data-act="hide">Ocultar</button></div>
+    <div class="actions"><button class="btn primary" data-act="focus">${t("focus")}</button><button class="btn" data-act="iso">${isolated ? t("showAll") : t("isolate")}</button><button class="btn" data-act="hide">${t("hide")}</button></div>
     <p class="desc">${esc(c.d)}</p>
-    ${(P.p.pf || []).concat(c.f).length ? `<dl class="facts">${(P.p.pf || []).concat(c.f).map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl>` : ""}
-    <label style="display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--mut);cursor:pointer"><input type="checkbox" id="focusmode" ${focusMode ? "checked" : ""} style="accent-color:var(--acc)"> Atenuar el resto del cuerpo</label>
-    <div class="src">Fuente: microtomograf\xEDa de Xenopus laevis, Zenodo 10951411 \xB7 pieza ${esc(selected)}</div>`;
+    ${factsOf(P).length ? `<dl class="facts">${factsOf(P).map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl>` : ""}
+    <label style="display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--mut);cursor:pointer"><input type="checkbox" id="focusmode" ${focusMode ? "checked" : ""} style="accent-color:var(--acc)"> ${t("dimRest")}</label>
+    <div class="src">${t("source", esc(selected))}</div>`;
     box.querySelectorAll("[data-act]").forEach((b) => b.addEventListener("click", () => ({ focus: focusSel, iso: toggleIsolate, hide: hideSel })[b.dataset.act]()));
     box.querySelector("#focusmode").addEventListener("change", (e) => {
       focusMode = e.target.checked;
@@ -35105,7 +35365,7 @@ void main() {
       if (isolated) isolated.add(id);
       sysState[c.s].on = true;
       hiddenParts.delete(id);
-      hiddenGroups.delete(c.s + "|" + c.g);
+      hiddenGroups.delete(c.s + "|" + c.gk);
       applyVisibility();
     }
     P.mesh.material = hlMat;
@@ -35117,7 +35377,7 @@ void main() {
       P.mesh.geometry.computeBoundingBox();
       anchorLocal = P.mesh.geometry.boundingBox.getCenter(new Vector3());
     }
-    $("#label .ln").textContent = c.n + (P.p.num ? " " + P.p.num : "");
+    $("#label .ln").textContent = c.n + (P.p.num ? " " + numL(P.p) : "");
     $("#label .ls").textContent = [SYS[c.s].n, SIDE[P.p.sd]].filter(Boolean).join(" \xB7 ");
     renderInfo();
     refreshListStates();
@@ -35182,8 +35442,8 @@ void main() {
   }
   var VIEWS = { top: [0, 92, 0.01], bottom: [0, -88, 0.01], right: [-88, 8, 0], left: [88, 8, 0], front: [0, 12, 88] };
   function setView(v) {
-    const t = new Vector3(0, 2, 0);
-    flyTo(new Vector3(...VIEWS[v]), t);
+    const t2 = new Vector3(0, 2, 0);
+    flyTo(new Vector3(...VIEWS[v]), t2);
   }
   document.querySelectorAll("[data-view]").forEach((b) => b.addEventListener("click", () => setView(b.dataset.view)));
   camera.position.set(40, 46, 56);
@@ -35273,7 +35533,7 @@ void main() {
       return;
     }
     const P = PARTS[h.object.userData.id];
-    tip.innerHTML = esc(CONC[P.p.c].n) + (P.p.num ? `<i>${esc(P.p.num)}</i>` : "");
+    tip.innerHTML = esc(CONC[P.p.c].n) + (P.p.num ? `<i>${esc(numL(P.p))}</i>` : "");
     tip.style.transform = `translate(${e.clientX + 14}px, ${e.clientY + 14}px)`;
     renderer.domElement.style.cursor = "pointer";
   }
@@ -35284,10 +35544,10 @@ void main() {
     else if (e.key === "h" || e.key === "H") hideSel();
     else if (e.key === "i" || e.key === "I") toggleIsolate();
   });
-  function showTab(t) {
+  function showTab(t2) {
     if (innerWidth > 900) return;
-    ["left", "right"].forEach((k) => $("#" + k).classList.toggle("show", k === t));
-    document.querySelectorAll("[data-tab]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.tab === t)));
+    ["left", "right"].forEach((k) => $("#" + k).classList.toggle("show", k === t2));
+    document.querySelectorAll("[data-tab]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.tab === t2)));
     fitView();
   }
   function fitView() {
@@ -35327,7 +35587,7 @@ void main() {
   var T0 = performance.now();
   function tick() {
     requestAnimationFrame(tick);
-    const t = (performance.now() - T0) / 1e3;
+    const t2 = (performance.now() - T0) / 1e3;
     if (fly) {
       let k = Math.min(1, (performance.now() - fly.s) / fly.ms);
       k = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
@@ -35336,8 +35596,8 @@ void main() {
       if (k >= 1) fly = null;
     }
     controls.update();
-    hlMat.emissiveIntensity = 0.28 + 0.14 * Math.sin(t * 3.2);
-    ghostMat.opacity = 0.16 + 0.08 * Math.sin(t * 3.2);
+    hlMat.emissiveIntensity = 0.28 + 0.14 * Math.sin(t2 * 3.2);
+    ghostMat.opacity = 0.16 + 0.08 * Math.sin(t2 * 3.2);
     renderer.render(scene, camera);
     const lab = $("#label"), line = $("#lline"), dot = $("#ldot");
     if (selected && anchorLocal && PARTS[selected].mesh.visible) {
@@ -35373,7 +35633,7 @@ void main() {
   tick();
   boot().catch((err) => {
     $("#err").hidden = false;
-    $("#err").textContent = "Error al cargar los datos: " + err.message;
+    $("#err").textContent = t("errData", err.message);
     console.error(err);
   });
 })();

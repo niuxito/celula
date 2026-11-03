@@ -6,12 +6,25 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { LANGS, LANG_NAMES, STR, detectLang } from './i18n.js';
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const norm = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
-const SIDE = {D:'Lado derecho', I:'Lado izquierdo', '':''};
-const SIDE_SHORT = {D:'dcho.', I:'izq.', '':''};
+
+// ---------------------------------------------------------------- idioma
+// Español: texto base en data/anatomia.js. Otros idiomas: capa de traducción en data/anatomia.<código>.js
+// (window.ANAT_I18N[código] = {systems:{k:{n,d}}, concepts:[[nombre, grupo, descripción, hechos], …]}, mismo orden que concepts).
+let lang = detectLang();
+const t = (k, ...a) => { const v = STR[lang][k] ?? STR.es[k]; return typeof v === 'function' ? v(...a) : v; };
+const SIDE = {get D(){ return t('sideD'); }, get I(){ return t('sideI'); }, '':''};
+const SIDE_SHORT = {get D(){ return t('sideDs'); }, get I(){ return t('sideIs'); }, '':''};
+const numL = p => p.num ? t('num', p.num) : '';
+const factsOf = P => (P.p.pf || []).map(([k, v]) => [t('factKey', k), t('factVal', v)]).concat(CONC[P.p.c].f);
+function loadOverlay(l){
+  if (l === 'es' || (window.ANAT_I18N || {})[l]) return Promise.resolve();
+  return new Promise((ok, fail) => { const sc = document.createElement('script'); sc.src = `data/anatomia.${l}.js`; sc.onload = ok; sc.onerror = fail; document.head.appendChild(sc); });
+}
 
 // ---------------------------------------------------------------- escena
 const stage = $('#stage');
@@ -39,7 +52,7 @@ const root = new THREE.Group();
 // las mallas ya vienen centradas (unidades: cm)
 scene.add(root);
 
-// suelo: disco de sombra suave + regla de estatura
+// suelo: disco de sombra suave + barra de escala
 (function floor(){
   const c = document.createElement('canvas'); c.width = c.height = 256;
   const g = c.getContext('2d'); const gr = g.createRadialGradient(128,128,0,128,128,128);
@@ -60,6 +73,7 @@ scene.add(root);
 
 // ---------------------------------------------------------------- estado
 let DATA, SYS = {}, CONC, PARTS = {};  // PARTS[id] = {p, c, mesh}
+let BASE_SYS, BASE_CONC;
 const matCache = new Map();
 const sysState = {};   // k -> {on, op}
 const hiddenGroups = new Set();
@@ -105,7 +119,7 @@ function applyOpacity(){
 function isVisible(id){
   const P = PARTS[id]; const c = CONC[P.p.c];
   if (isolated) return isolated.has(id);
-  return sysState[c.s].on && !hiddenGroups.has(c.s + '|' + c.g) && !hiddenParts.has(id);
+  return sysState[c.s].on && !hiddenGroups.has(c.s + '|' + c.gk) && !hiddenParts.has(id);
 }
 function applyVisibility(){
   for (const id in PARTS){ const P = PARTS[id]; if (P.mesh) P.mesh.visible = isVisible(id); }
@@ -118,11 +132,12 @@ let ORDER = ['pm','nuc','er','golgi','mito','endo','ves','mt'];
 const progress = {};
 async function boot(){
   DATA = window.ANAT_DATA; ORDER = ORDER.filter(k => DATA.files[k]);
-  CONC = DATA.concepts;
-  DATA.systems.forEach(s => { SYS[s.k] = s; sysState[s.k] = {on:true, op: s.k==='pm' ? 0.2 : (s.k==='er' ? 0.35 : 1)}; });
+  BASE_SYS = DATA.systems; BASE_CONC = DATA.concepts;
+  BASE_CONC.forEach(c => c.gk = c.g);   // clave de grupo estable, independiente del idioma
+  BASE_SYS.forEach(s => { sysState[s.k] = {on:true, op: s.k==='pm' ? 0.2 : (s.k==='er' ? 0.35 : 1)}; });
   DATA.parts.forEach(p => PARTS[p.id] = {p, mesh:null});
-  const nConc = new Set(DATA.parts.map(p=>p.c)).size;
-  $('#stats').innerHTML = `Célula HeLa · ${DATA.meta.mito} mitocondrias · ${nConc} tipos de orgánulo · FIB-SEM`;
+  try { await loadOverlay(lang); } catch (e) { console.warn('Sin traducción para', lang); lang = 'es'; }
+  localize(); applyStatic();
   buildSystemsUI(); renderInfo(); applyOpacity();
   const total = Object.values(DATA.files).reduce((a,f)=>a+f.bytes,0);
   const upd = () => { const got = Object.values(progress).reduce((a,b)=>a+b,0); const pct = Math.min(100, Math.round(got/total*100));
@@ -131,7 +146,7 @@ async function boot(){
   // las mallas se publican como GLB codificado en base64 (.txt)
   // versión autónoma: las mallas vienen en models/*.js como GLB codificado en base64
   async function fetchModel(sk){
-    const txt = (window.ANAT_MODELS || {})[sk]; if (!txt) throw new Error('falta models/' + sk + '.js');
+    const txt = (window.ANAT_MODELS || {})[sk]; if (!txt) throw new Error('missing models/' + sk + '.js');
     const bin = Uint8Array.from(atob(txt), c => c.charCodeAt(0));
     progress[sk] = DATA.files[sk].bytes; upd();
     return bin.buffer;
@@ -151,40 +166,69 @@ async function boot(){
       });
       root.add(gltf.scene);
       progress[sk] = DATA.files[sk].bytes; upd();
-      done++; $('#ltxt').textContent = `Sistema ${SYS[sk].n.toLowerCase()} listo (${done}/${ORDER.length})`;
-    } catch (err) { $('#err').hidden = false; $('#err').textContent = 'No se pudo cargar el sistema ' + SYS[sk].n + '.'; console.error(err); }
+      done++; $('#ltxt').textContent = t('systemReady', SYS[sk].n, done, ORDER.length);
+    } catch (err) { $('#err').hidden = false; $('#err').textContent = t('errSystem', SYS[sk].n); console.error(err); }
   }));
   applyOpacity();
-  $('#ltxt').textContent = 'Modelo completo'; setTimeout(()=>$('#loader').classList.add('done'), 700);
+  $('#ltxt').textContent = t('modelDone'); setTimeout(()=>$('#loader').classList.add('done'), 700);
 }
 
 // ---------------------------------------------------------------- UI: sistemas
 const EYE = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>';
 const EYE_OFF = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3l18 18M10.6 5.1A10 10 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4M6.2 6.3C3.6 8 2 12 2 12s3.6 7 10 7a9.6 9.6 0 0 0 4.3-1"/></svg>';
+function localize(){
+  const ov = (window.ANAT_I18N || {})[lang] || {};
+  DATA.systems = BASE_SYS.map(s => ({...s, ...((ov.systems || {})[s.k] || {})}));
+  DATA.systems.forEach(s => SYS[s.k] = s);
+  CONC = DATA.concepts = BASE_CONC.map((c, i) => { const o = (ov.concepts || [])[i]; return o ? {...c, n:o[0], g:o[1], d:o[2], f:o[3] || []} : c; });
+}
+function applyStatic(){
+  document.documentElement.lang = lang;
+  document.title = t('title');
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-html]').forEach(el => { el.innerHTML = t(el.dataset.i18nHtml); });
+  document.querySelectorAll('[data-i18n-attr]').forEach(el => el.dataset.i18nAttr.split(';').forEach(p => { const [a, k] = p.split(':'); el.setAttribute(a, t(k)); }));
+  const next = LANGS[(LANGS.indexOf(lang) + 1) % LANGS.length];
+  $('#lang').textContent = next.toUpperCase(); $('#lang').title = LANG_NAMES[next];
+  if (DATA){ const nConc = new Set(DATA.parts.map(p => p.c)).size; $('#stats').textContent = t('stats', DATA.meta.mito, nConc); }
+}
+async function setLang(l){
+  try { await loadOverlay(l); } catch (e) { console.warn('Sin traducción para', l); return; }
+  lang = l; try { localStorage.setItem('lang', l); } catch (e) {}
+  const openSys = [...document.querySelectorAll('.sys.open')].map(el => el.dataset.sys);
+  const openGrp = [...document.querySelectorAll('.grp.open')].map(el => el.dataset.gid);
+  localize(); applyStatic(); buildSystemsUI();
+  openSys.forEach(k => { const el = document.querySelector(`.sys[data-sys="${k}"]`); if (el){ el.classList.add('open'); el.querySelector('.sysname').setAttribute('aria-expanded', 'true'); } });
+  openGrp.forEach(g => document.querySelector(`.grp[data-gid="${CSS.escape(g)}"] .grow button`)?.click());
+  if (selected){ const P = PARTS[selected], c = CONC[P.p.c]; $('#label .ln').textContent = c.n + (P.p.num ? ' ' + numL(P.p) : ''); $('#label .ls').textContent = [SYS[c.s].n, SIDE[P.p.sd]].filter(Boolean).join(' · '); }
+  renderInfo(); refreshListStates();
+  if ($('#q').value) $('#q').dispatchEvent(new Event('input'));
+}
+$('#lang').addEventListener('click', () => setLang(LANGS[(LANGS.indexOf(lang) + 1) % LANGS.length]));
 const CHEV = '<svg class="chev" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m9 6 6 6-6 6"/></svg>';
 function buildSystemsUI(){
   const box = $('#systems'); box.innerHTML = '';
   for (const s of DATA.systems){
     const parts = DATA.parts.filter(p => CONC[p.c].s === s.k);
-    const groups = {};
-    parts.forEach(p => (groups[CONC[p.c].g] ||= []).push(p));
+    const groups = {}, gname = {};   // clave estable -> partes / nombre en el idioma actual
+    parts.forEach(p => { const c = CONC[p.c]; (groups[c.gk] ||= []).push(p); gname[c.gk] = c.g; });
     const el = document.createElement('div'); el.className = 'sys'; el.dataset.sys = s.k;
     el.innerHTML = `<div class="sysrow"><span class="sw" style="background:${s.c}"></span>
       <button class="sysname" aria-expanded="false">${CHEV}${esc(s.n)}</button>
       <span class="count">${parts.length}</span>
-      <button class="eye" aria-pressed="true" aria-label="Mostrar u ocultar ${esc(s.n)}">${EYE}</button></div>
-      <div class="oprow"><label for="op-${s.k}">Opacidad</label><input type="range" id="op-${s.k}" min="0" max="100" value="${Math.round(sysState[s.k].op*100)}" style="--c:${s.c}"><output>${Math.round(sysState[s.k].op*100)} %</output></div>
+      <button class="eye" aria-pressed="true" aria-label="${esc(t('toggleSys', s.n))}">${EYE}</button></div>
+      <div class="oprow"><label for="op-${s.k}">${t('opacity')}</label><input type="range" id="op-${s.k}" min="0" max="100" value="${Math.round(sysState[s.k].op*100)}" style="--c:${s.c}"><output>${Math.round(sysState[s.k].op*100)} %</output></div>
       <div class="groups"></div>`;
     const gbox = el.querySelector('.groups');
-    Object.keys(groups).sort((a,b)=>a.localeCompare(b,'es')).forEach(g => {
+    Object.keys(groups).sort((a,b)=>gname[a].localeCompare(gname[b],lang)).forEach(g => {
       const gid = s.k + '|' + g;
-      const ge = document.createElement('div'); ge.className = 'grp';
-      ge.innerHTML = `<div class="grow"><input type="checkbox" checked aria-label="Mostrar ${esc(g)}"><button>${esc(g)}</button><span class="count">${groups[g].length}</span></div><div class="plist"></div>`;
+      const ge = document.createElement('div'); ge.className = 'grp'; ge.dataset.gid = gid;
+      ge.innerHTML = `<div class="grow"><input type="checkbox" ${hiddenGroups.has(gid) ? '' : 'checked'} aria-label="${esc(t('showGroup', gname[g]))}"><button>${esc(gname[g])}</button><span class="count">${groups[g].length}</span></div><div class="plist"></div>`;
       ge.querySelector('input').addEventListener('change', e => { e.target.checked ? hiddenGroups.delete(gid) : hiddenGroups.add(gid); exitIsolate(); applyVisibility(); });
       ge.querySelector('button').addEventListener('click', () => {
         const pl = ge.querySelector('.plist');
         if (!pl.childElementCount){
-          groups[g].sort((a,b)=> CONC[a.c].n.localeCompare(CONC[b.c].n,'es') || (a.num||'').localeCompare(b.num||'','es',{numeric:true}) || a.sd.localeCompare(b.sd)).forEach(p => pl.appendChild(partButton(p)));
+          groups[g].sort((a,b)=> CONC[a.c].n.localeCompare(CONC[b.c].n,lang) || (a.num||'').localeCompare(b.num||'',lang,{numeric:true}) || a.sd.localeCompare(b.sd)).forEach(p => pl.appendChild(partButton(p)));
           refreshListStates();
         }
         ge.classList.toggle('open');
@@ -202,7 +246,7 @@ function buildSystemsUI(){
 }
 function partButton(p){
   const b = document.createElement('button'); b.className = 'pitem'; b.dataset.id = p.id;
-  b.innerHTML = `<span class="dot" style="background:${p.col}"></span><span>${esc(CONC[p.c].n)}</span><span class="sd">${esc(p.num || SIDE_SHORT[p.sd])}</span>`;
+  b.innerHTML = `<span class="dot" style="background:${p.col}"></span><span>${esc(CONC[p.c].n)}</span><span class="sd">${esc(numL(p) || SIDE_SHORT[p.sd])}</span>`;
   b.addEventListener('click', () => { select(p.id, null, true); showTab('right'); });
   return b;
 }
@@ -226,9 +270,9 @@ $('#q').addEventListener('input', e => {
   const q = norm(e.target.value.trim()); const box = $('#results');
   if (q.length < 2){ box.hidden = true; $('#systems').hidden = false; return; }
   const words = q.split(/\s+/);
-  const hits = DATA.parts.filter(p => { const h = norm(CONC[p.c].n + ' ' + (p.num||'') + ' ' + CONC[p.c].g); return words.every(w => h.includes(w)); })
+  const hits = DATA.parts.filter(p => { const h = norm(CONC[p.c].n + ' ' + (p.num||'') + ' ' + numL(p) + ' ' + CONC[p.c].g + ' ' + BASE_CONC[p.c].n); return words.every(w => h.includes(w)); })
     .sort((a,b) => norm(CONC[a.c].n).indexOf(words[0]) - norm(CONC[b.c].n).indexOf(words[0]) || CONC[a.c].n.length - CONC[b.c].n.length).slice(0, 40);
-  box.innerHTML = hits.length ? '' : '<div class="eyebrow" style="padding:10px 8px">Sin resultados</div>';
+  box.innerHTML = hits.length ? '' : `<div class="eyebrow" style="padding:10px 8px">${t('noResults')}</div>`;
   hits.forEach(p => box.appendChild(partButton(p)));
   box.hidden = false; $('#systems').hidden = true; refreshListStates();
 });
@@ -238,27 +282,18 @@ function renderInfo(){
   const box = $('#info');
   if (!selected){
     box.innerHTML = `<div class="empty" style="display:flex;flex-direction:column;gap:14px">
-      <div class="eyebrow">Cómo usarlo</div>
-      <h2>Selecciona cualquier orgánulo de la célula</h2>
+      <div class="eyebrow">${t('howTo')}</div>
+      <h2>${t('selectAny')}</h2>
       <ul class="howto">
-        <li><span>①</span><span>Arrastra para girar, rueda o pellizca para acercar y clic derecho para desplazar.</span></li>
-        <li><span>②</span><span>Haz clic en un orgánulo para ver su nombre y su ficha. Cada mitocondria tiene sus propias medidas.</span></li>
-        <li><span>③</span><span>Usa <b>Pelar capas</b> o el ojo de cada orgánulo para retirar la membrana y ver el interior; ajusta la opacidad para ver a través.</span></li>
-        <li><span>④</span><span>Atajos: <kbd>Esc</kbd> deseleccionar · <kbd>F</kbd> enfocar · <kbd>H</kbd> ocultar · <kbd>I</kbd> aislar</span></li>
+        <li><span>①</span><span>${t('how1')}</span></li>
+        <li><span>②</span><span>${t('how2')}</span></li>
+        <li><span>③</span><span>${t('how3')}</span></li>
+        <li><span>④</span><span>${t('how4')}</span></li>
       </ul>
-      <div class="eyebrow" style="margin-top:6px">Orgánulos incluidos</div>
+      <div class="eyebrow" style="margin-top:6px">${t('systemsIncluded')}</div>
       <div class="syslist">${DATA.systems.map(s => `<div><span class="sw" style="background:${s.c}"></span><span><b>${esc(s.n)}.</b> ${esc(s.d)}</span></div>`).join('')}</div>
-      <details class="about"><summary>Acerca del modelo y su rigor</summary>
-        <p>No es un dibujo: es una célula real. Las formas proceden del conjunto de datos <a href="https://openorganelle.janelia.org/datasets/jrc_hela-2" target="_blank" rel="noopener">jrc_hela-2 de OpenOrganelle</a> (HHMI Janelia). Es una célula HeLa humana en interfase, congelada a alta presión y escaneada entera por microscopía electrónica de barrido con haz de iones focalizado (FIB-SEM), con vóxeles de 4 × 4 × 5,24 nm. Los orgánulos fueron segmentados con redes neuronales y revisados por el equipo COSEM: <a href="https://doi.org/10.1038/s41586-021-03977-3" target="_blank" rel="noopener">Heinrich et al., <i>Nature</i> 2021</a>; imagen: <a href="https://doi.org/10.1038/s41586-021-03992-4" target="_blank" rel="noopener">Xu et al., <i>Nature</i> 2021</a>.</p>
-        <p><b>Qué se ha hecho para este visor.</b></p>
-        <ul><li>Se han usado los niveles de detalle intermedios de las mallas originales y se han simplificado para la web. Las formas y posiciones son las reales; el detalle fino de las membranas es menor que en el original.</li>
-        <li>El volumen escaneado incluye trozos de células vecinas. Aquí solo se muestran la membrana, el núcleo y los orgánulos de la célula central, separados automáticamente según su posición.</li>
-        <li>Las medidas de cada mitocondria y del núcleo se han calculado sobre las mallas del visor y son aproximadas.</li>
-        <li>Las 26.364 vesículas de la célula se muestran con su forma y posición reales, pero muy simplificadas por su número.</li>
-        <li>Los colores son convencionales: en la microscopía electrónica no hay color.</li></ul>
-        <p>Licencia de los datos: <a href="https://doi.org/10.25378/janelia.13108343" target="_blank" rel="noopener">CC BY 4.0</a> (Janelia Research Campus).</p>
-        <p><b>Qué no aparece.</b> Ribosomas, filamentos de actina y filamentos intermedios, centrosoma, nucléolo, poros nucleares y lisosomas como clase aparte. Están en la célula, pero no forman parte de las mallas publicadas de este conjunto de datos. Por eso el citoplasma parece vacío, aunque en realidad está abarrotado de proteínas.</p>
-        <p><b>Sobre las células HeLa.</b> Proceden de un tumor de cuello uterino de Henrietta Lacks, extraído en 1951 sin su consentimiento, como era habitual entonces. Son la primera línea celular humana inmortal y han sido clave en avances como la vacuna de la polio.</p>
+      <details class="about"><summary>${t('aboutTitle')}</summary>
+        ${t('about')}
       </details></div>`;
     return;
   }
@@ -266,11 +301,11 @@ function renderInfo(){
   box.innerHTML = `<div class="tags"><span class="tag"><span class="sw" style="background:${s.c}"></span>${esc(s.n)}</span>${P.p.sd ? `<span class="tag">${SIDE[P.p.sd]}</span>` : ''}</div>
     <h2>${esc(c.n)}</h2>
     <div class="grpname">${esc(c.g)}</div>
-    <div class="actions"><button class="btn primary" data-act="focus">Enfocar</button><button class="btn" data-act="iso">${isolated ? 'Ver todo' : 'Aislar'}</button><button class="btn" data-act="hide">Ocultar</button></div>
+    <div class="actions"><button class="btn primary" data-act="focus">${t('focus')}</button><button class="btn" data-act="iso">${isolated ? t('showAll') : t('isolate')}</button><button class="btn" data-act="hide">${t('hide')}</button></div>
     <p class="desc">${esc(c.d)}</p>
-    ${(P.p.pf||[]).concat(c.f).length ? `<dl class="facts">${(P.p.pf||[]).concat(c.f).map(([k,v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>` : ''}
-    <label style="display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--mut);cursor:pointer"><input type="checkbox" id="focusmode" ${focusMode?'checked':''} style="accent-color:var(--acc)"> Atenuar el resto del cuerpo</label>
-    <div class="src">Fuente: microtomografía de Xenopus laevis, Zenodo 10951411 · pieza ${esc(selected)}</div>`;
+    ${factsOf(P).length ? `<dl class="facts">${factsOf(P).map(([k,v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>` : ''}
+    <label style="display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--mut);cursor:pointer"><input type="checkbox" id="focusmode" ${focusMode?'checked':''} style="accent-color:var(--acc)"> ${t('dimRest')}</label>
+    <div class="src">${t('source', esc(selected))}</div>`;
   box.querySelectorAll('[data-act]').forEach(b => b.addEventListener('click', () => ({focus:focusSel, iso:toggleIsolate, hide:hideSel})[b.dataset.act]()));
   box.querySelector('#focusmode').addEventListener('change', e => { focusMode = e.target.checked; applyOpacity(); });
 }
@@ -282,12 +317,12 @@ function select(id, hitPoint, fly){
   selected = id;
   const c = CONC[P.p.c];
   // asegurar visibilidad
-  if (!isVisible(id)){ if (isolated) isolated.add(id); sysState[c.s].on = true; hiddenParts.delete(id); hiddenGroups.delete(c.s+'|'+c.g); applyVisibility(); }
+  if (!isVisible(id)){ if (isolated) isolated.add(id); sysState[c.s].on = true; hiddenParts.delete(id); hiddenGroups.delete(c.s+'|'+c.gk); applyVisibility(); }
   P.mesh.material = hlMat;
   ghost.geometry = P.mesh.geometry; P.mesh.add(ghost); ghost.visible = true;
   if (hitPoint) anchorLocal = P.mesh.worldToLocal(hitPoint.clone());
   else { P.mesh.geometry.computeBoundingBox(); anchorLocal = P.mesh.geometry.boundingBox.getCenter(new THREE.Vector3()); }
-  $('#label .ln').textContent = c.n + (P.p.num ? ' ' + P.p.num : '');
+  $('#label .ln').textContent = c.n + (P.p.num ? ' ' + numL(P.p) : '');
   $('#label .ls').textContent = [SYS[c.s].n, SIDE[P.p.sd]].filter(Boolean).join(' · ');
   renderInfo(); refreshListStates(); applyOpacity();
   if (fly){ focusMode = true; applyOpacity(); renderInfo(); focusSel(); }
@@ -364,7 +399,7 @@ function doHover(){
   const h = pick(e.clientX, e.clientY);
   if (!h){ tip.style.transform = 'translate(-9999px,0)'; renderer.domElement.style.cursor = ''; return; }
   const P = PARTS[h.object.userData.id];
-  tip.innerHTML = esc(CONC[P.p.c].n) + (P.p.num ? `<i>${esc(P.p.num)}</i>` : '');
+  tip.innerHTML = esc(CONC[P.p.c].n) + (P.p.num ? `<i>${esc(numL(P.p))}</i>` : '');
   tip.style.transform = `translate(${e.clientX+14}px, ${e.clientY+14}px)`;
   renderer.domElement.style.cursor = 'pointer';
 }
@@ -383,7 +418,7 @@ function showTab(t){
   document.querySelectorAll('[data-tab]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tab === t)));
   fitView();
 }
-// en móvil, encaja el cuerpo en la zona libre entre la cabecera y el panel inferior
+// en móvil, encaja la célula en la zona libre entre la cabecera y el panel inferior
 function fitView(){
   const W = innerWidth, H = innerHeight;
   if (W > 900){ camera.clearViewOffset(); camera.zoom = 1; camera.updateProjectionMatrix(); return; }
@@ -391,7 +426,7 @@ function fitView(){
   const pan = document.querySelector('.panel.show');
   const botH = pan ? H - pan.getBoundingClientRect().top + 8 : 64;
   const free = Math.max(120, H - topH - botH);
-  camera.zoom = Math.min(1, free / H * 1.08, (W / H) / 0.95);   // la rana es más ancha que alta
+  camera.zoom = Math.min(1, free / H * 1.08, (W / H) / 0.95);   // la célula es más ancha que alta
   camera.setViewOffset(W, H, 0, (botH - topH) / 2, W, H);
   camera.updateProjectionMatrix();
 }
@@ -433,4 +468,4 @@ function tick(){
   } else { lab.style.transform = 'translate(-9999px,0)'; line.setAttribute('x1',-99); line.setAttribute('x2',-99); line.setAttribute('y1',-99); line.setAttribute('y2',-99); dot.setAttribute('cx',-99); }
 }
 tick();
-boot().catch(err => { $('#err').hidden = false; $('#err').textContent = 'Error al cargar los datos: ' + err.message; console.error(err); });
+boot().catch(err => { $('#err').hidden = false; $('#err').textContent = t('errData', err.message); console.error(err); });

@@ -2,7 +2,7 @@
 
 🇪🇸 [Versión en español](README.es.md)
 
-Interactive 3D viewer of a real human cell (HeLa line) reconstructed by electron microscopy (FIB-SEM), for educational use. It shows the plasma membrane, nucleus, endoplasmic reticulum, Golgi apparatus, 265 mitochondria with their measurements, endosomes, vesicles and microtubules, with layers you can toggle, per-organelle opacity, search, and a description card for each structure.
+Interactive 3D viewer of a real human cell (HeLa line) reconstructed by electron microscopy (FIB-SEM), for educational use. It shows the plasma membrane, nucleus, endoplasmic reticulum, Golgi apparatus, 265 mitochondria with their measurements, endosomes, vesicles and microtubules, with layers you can toggle, per-organelle opacity, search, and a description card for each structure. **Available in Spanish and English**: the language is picked from your browser and can be switched with the ES/EN button (or `?lang=en`). The English cards are a translation of the Spanish originals and have not been reviewed by specialists.
 
 ## Usage
 
@@ -32,7 +32,9 @@ To publish it on the web, upload the folder as is to any static host (GitHub Pag
 | `package.json`, `package-lock.json` | Dependencies and build command |
 | `herramientas/` | Scripts that prepared the meshes and cards (see `herramientas/LEEME.md`, in Spanish) |
 | `fonts/` | Local fonts with their OFL licenses |
+| `src/i18n.js` | Interface texts per language |
 | `data/anatomia.js` | Organelle cards, names and organization (Spanish base text) |
+| `data/anatomia.en.js` | English translation layer of the cards (loaded on demand) |
 | `models/*.js` | 3D meshes (meshoptimizer-compressed binary glTF, base64) |
 | `LICENSE`, `LICENSE-codigo.txt` | MIT license for the code |
 | `LICENSE-contenido.md` | License for the meshes and texts (CC BY 4.0) |
