@@ -1,0 +1,39 @@
+cff-version: 1.2.0
+message: "If you use this work, please cite it as below. Mesh data derive from OpenOrganelle jrc_hela-2 (HHMI Janelia, CC BY 4.0); please cite it too."
+title: "Célula humana en capas: interactive 3D viewer of a real HeLa cell"
+type: software
+version: 1.0.0
+date-released: 2026-11-03
+license:
+  - MIT
+  - CC-BY-4.0
+authors:
+  - family-names: Parrón
+    given-names: Alexis
+repository-code: "https://github.com/niuxito/celula"
+url: "https://celula.alexisparron.com"
+keywords:
+  - cell biology
+  - 3D
+  - education
+  - three.js
+  - electron microscopy
+  - OpenOrganelle
+references:
+  - type: article
+    title: "Whole-cell organelle segmentation in volume electron microscopy"
+    authors:
+      - family-names: Heinrich
+        given-names: Larissa
+    journal: Nature
+    volume: 599
+    start: 141
+    end: 146
+    year: 2021
+    doi: "10.1038/s41586-021-03977-3"
+  - type: data
+    title: "OpenOrganelle jrc_hela-2"
+    authors:
+      - name: "HHMI Janelia Research Campus (COSEM Project Team)"
+    url: "https://openorganelle.janelia.org/datasets/jrc_hela-2"
+    license: CC-BY-4.0
