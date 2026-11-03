@@ -7,7 +7,7 @@ Visor 3D interactivo de una célula humana real (línea HeLa) reconstruida por m
 1. Descomprime el zip.
 2. Abre `index.html` con doble clic en cualquier navegador moderno (Chrome, Firefox, Edge, Safari).
 
-Funciona sin conexión y sin instalar nada. Con internet se cargan además las tipografías de Google Fonts; sin internet se usan las del sistema.
+Funciona sin conexión y sin instalar nada. Las tipografías van incluidas en `fonts/` (Newsreader e IBM Plex, licencia SIL OFL 1.1), así que no se contacta con ningún servidor externo.
 
 Para modificar el visor, edita `src/visor.js` y regenera `app.js`:
 
@@ -26,6 +26,7 @@ Para publicarlo en la web basta con subir la carpeta tal cual a cualquier alojam
 | `src/visor.js` | **Código fuente** del visor (JavaScript legible, módulo ES) |
 | `app.js` | El mismo código empaquetado con three.js, sin minificar (generado) |
 | `package.json` | Dependencias y comando para regenerar `app.js` |
+| `fonts/` | Tipografías en local con sus licencias OFL |
 | `herramientas/` | Scripts que prepararon las mallas y las fichas (ver `herramientas/LEEME.md`) |
 | `data/anatomia.js` | Fichas, nombres y organización por sistemas |
 | `models/*.js` | Mallas 3D (glTF binario comprimido con meshoptimizer, en base64) |
