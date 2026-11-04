@@ -80,6 +80,7 @@ const hiddenGroups = new Set();
 const hiddenParts = new Set();
 let isolated = null;   // Set de ids o null
 let selected = null, anchorLocal = null, focusMode = false;
+let labelLeft = null;   // lado de la etiqueta; con margen para que no parpadee si el punto queda en el centro
 
 function glassify(mat){
   mat.userData.glass = {value: 0};
@@ -314,7 +315,7 @@ function renderInfo(){
 function select(id, hitPoint, fly){
   const P = PARTS[id]; if (!P || !P.mesh) return;
   if (selected && PARTS[selected].mesh) PARTS[selected].mesh.material = materialFor(CONC[PARTS[selected].p.c].s, PARTS[selected].p.col);
-  selected = id;
+  selected = id; labelLeft = null;
   const c = CONC[P.p.c];
   // asegurar visibilidad
   if (!isVisible(id)){ if (isolated) isolated.add(id); sysState[c.s].on = true; hiddenParts.delete(id); hiddenGroups.delete(c.s+'|'+c.gk); applyVisibility(); }
@@ -456,7 +457,8 @@ function tick(){
     const x = (v3.x*.5+.5)*innerWidth, y = (-v3.y*.5+.5)*innerHeight;
     if (v3.z < 1){
       const w = lab.offsetWidth, hgt = lab.offsetHeight;
-      const leftSide = x > innerWidth*0.5;
+      if (labelLeft === null || Math.abs(x - innerWidth*0.5) > 40) labelLeft = x > innerWidth*0.5;
+      const leftSide = labelLeft;
       let lx = leftSide ? x - 70 - w : x + 70, ly = y - 70 - hgt/2;
       const minX = innerWidth > 900 ? 362 : 12, maxX = innerWidth > 900 ? innerWidth - 392 : innerWidth - 12;
       lx = Math.max(minX, Math.min(maxX - w, lx)); ly = Math.max(90, Math.min(innerHeight - hgt - 70, ly));

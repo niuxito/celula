@@ -34992,6 +34992,7 @@ void main() {
   var selected = null;
   var anchorLocal = null;
   var focusMode = false;
+  var labelLeft = null;
   function glassify(mat) {
     mat.userData.glass = { value: 0 };
     mat.onBeforeCompile = (sh) => {
@@ -35360,6 +35361,7 @@ void main() {
     if (!P || !P.mesh) return;
     if (selected && PARTS[selected].mesh) PARTS[selected].mesh.material = materialFor(CONC[PARTS[selected].p.c].s, PARTS[selected].p.col);
     selected = id;
+    labelLeft = null;
     const c = CONC[P.p.c];
     if (!isVisible(id)) {
       if (isolated) isolated.add(id);
@@ -35607,7 +35609,8 @@ void main() {
       const x = (v3.x * 0.5 + 0.5) * innerWidth, y = (-v3.y * 0.5 + 0.5) * innerHeight;
       if (v3.z < 1) {
         const w = lab.offsetWidth, hgt = lab.offsetHeight;
-        const leftSide = x > innerWidth * 0.5;
+        if (labelLeft === null || Math.abs(x - innerWidth * 0.5) > 40) labelLeft = x > innerWidth * 0.5;
+        const leftSide = labelLeft;
         let lx = leftSide ? x - 70 - w : x + 70, ly = y - 70 - hgt / 2;
         const minX = innerWidth > 900 ? 362 : 12, maxX = innerWidth > 900 ? innerWidth - 392 : innerWidth - 12;
         lx = Math.max(minX, Math.min(maxX - w, lx));
